@@ -14,7 +14,7 @@ On discrete GPU systems, data must be explicitly transferred from host RAM to GP
 
 For scan-heavy analytical queries processing hundreds of megabytes to gigabytes of columnar data, this transfer overhead can dominate total execution time -- often exceeding the GPU compute time itself.
 
-Apple Silicon's unified memory architecture eliminates this bus entirely. CPU and GPU cores share a single physical memory pool at **120 GB/s** bandwidth. There is no device-to-device copy; the GPU reads from the same memory addresses the CPU wrote to. The question is: how much does this actually matter in practice?
+Apple Silicon's unified memory architecture eliminates this bus entirely. CPU and GPU cores share a single physical memory pool at **120 GB/s** bandwidth. There is no device-to-device copy; the GPU reads from the same memory addresses to the CPU wrote to. The question is: how much does this actually matter in practice?
 
 ## Key Findings
 
