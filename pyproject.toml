@@ -1,0 +1,17 @@
+[project]
+name = "unified-db-2"
+version = "0.1.0"
+description = "Apple Silicon Unified Memory for GPU-Accelerated Analytics"
+requires-python = ">=3.14"
+dependencies = [
+    "mlx",
+    "duckdb",
+    "numpy",
+    "pyarrow",
+    "matplotlib",
+    "rich",
+    "psutil",
+]
+
+[tool.uv]
+dev-dependencies = []
