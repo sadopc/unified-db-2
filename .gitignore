@@ -11,7 +11,8 @@ wheels/
 
 # Project data & results
 data/
-results/
+results/*
+!results/*.png
 
 # Claude Code
 CLAUDE.md
