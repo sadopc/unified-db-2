@@ -10,11 +10,7 @@ GPU-accelerated databases (BlazingSQL, HeavyDB, Crystal) promise order-of-magnit
 
 On discrete GPU systems, data must be explicitly transferred from host RAM to GPU VRAM before compute can begin:
 
-| Bus           | Bandwidth | Typical System              |
-|---------------|----------:|-----------------------------|
-| PCIe 3.0 x16  |  ~12 GB/s | Older NVIDIA GPUs           |
-| PCIe 4.0 x16  |  ~25 GB/s | RTX 3090, A100              |
-| PCIe 5.0 x16  |  ~50 GB/s | RTX 4090, H100              |
+![Memory Bus Bandwidth Comparison](results/readme_bandwidth.png)
 
 For scan-heavy analytical queries processing hundreds of megabytes to gigabytes of columnar data, this transfer overhead can dominate total execution time -- often exceeding the GPU compute time itself.
 
@@ -26,16 +22,9 @@ Results from benchmarking on Apple M4 (10 GPU cores, 16 GB RAM, 120 GB/s unified
 
 **MLX GPU vs NumPy CPU (same algorithms, fair comparison):**
 
-At SF1 (~6M lineitem rows), MLX GPU kernels outperform equivalent NumPy CPU kernels on compute-heavy queries:
+At SF1 (~6M lineitem rows), MLX GPU kernels outperform equivalent NumPy CPU kernels on compute-heavy queries. At SF10 (~60M rows), the GPU advantage grows for aggregation-heavy queries but join-heavy queries show diminishing returns due to gather/scatter overhead of sparse index lookups on GPU.
 
-| Query | NumPy CPU (ms) | MLX GPU (ms) | GPU Speedup |
-|-------|---------------:|-------------:|------------:|
-| Q1    |         131.99 |        43.10 |       3.06x |
-| Q6    |          12.73 |         6.73 |       1.89x |
-| Q5    |          48.55 |        36.85 |       1.32x |
-| Q12   |          29.54 |        37.83 |       0.78x |
-
-At SF10 (~60M rows), the GPU advantage grows for aggregation-heavy queries (Q1: 3.03x, Q6: 2.17x) but join-heavy queries (Q3, Q5, Q12) show diminishing returns due to the gather/scatter overhead of sparse index lookups on GPU.
+![MLX GPU vs NumPy CPU Speedup](results/readme_gpu_speedup.png)
 
 **Supplemental GPU-showcase query (`QX`):**
 
@@ -48,13 +37,21 @@ At SF10 (~60M rows), the GPU advantage grows for aggregation-heavy queries (Q1: 
 
 The `QX` result demonstrates that MLX can outperform both NumPy and DuckDB when the workload is dominated by massively parallel arithmetic aggregation and avoids join-heavy optimizer-dependent logic.
 
-**DuckDB SQL (production-optimized baseline):**
+**Three-baseline comparison at SF1:**
 
-Across the six TPC-H queries, DuckDB's vectorized engine with a full query optimizer consistently outperforms hand-written kernels, especially at larger scale factors. At SF1, DuckDB is 1.5-4.6x faster than MLX on most queries. This is expected -- DuckDB benefits from decades of query optimization research, adaptive execution strategies, and C++ implementation, while the MLX/NumPy kernels use straightforward scatter-add algorithms without query planning.
+![Three-Baseline Comparison at SF1](results/readme_three_baseline_sf1.png)
+
+DuckDB's vectorized engine with a full query optimizer consistently outperforms hand-written kernels, especially at larger scale factors. At SF1, DuckDB is 1.5-4.6x faster than MLX on most queries. This is expected -- DuckDB benefits from decades of query optimization research, adaptive execution strategies, and C++ implementation, while the MLX/NumPy kernels use straightforward scatter-add algorithms without query planning.
 
 **Unified memory transfer overhead:**
 
-The scenario model shows that if the M4 GPU were behind a PCIe 4.0 bus, data transfer would add 10-40% overhead to GPU compute time depending on query data volume. At SF10, transferring ~1.6 GB for Q1 would add ~65 ms of PCIe 4.0 transfer time on top of the ~492 ms GPU compute -- a 13% overhead eliminated by unified memory.
+The scenario model shows that if the M4 GPU were behind a PCIe 4.0 bus, data transfer would add 10-36% overhead to GPU compute time depending on query data volume.
+
+![Transfer Overhead Scenario](results/readme_pcie_overhead.png)
+
+**MLX GPU scaling across data sizes:**
+
+![MLX GPU Scaling](results/readme_scaling.png)
 
 ## Architecture
 
